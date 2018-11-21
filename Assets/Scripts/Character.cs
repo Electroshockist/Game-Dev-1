@@ -15,9 +15,10 @@ public class Character : MonoBehaviour {
     public Transform projectileSpawnpoint;
 
     //player controller variables
-    public float accel, topSpeed, topSprintSpeed, rotationSpeed, jumpSpeed, horizontalSpeedModifier, gravity;
+    public float accel, baseTopSpeed, rotationSpeed, jumpSpeed, horizontalSpeedModifier, gravity;
 
-    public float currentSpeed = 0;
+    float currentSpeed = 0;
+    float topSpeed;
 
     /*calculates as a percentage of speed.
      A value of 1 would be 200% as fast.*/
@@ -33,7 +34,7 @@ public class Character : MonoBehaviour {
 
         if (gravity <= 0) gravity = -1.0f;
 
-        if (topSpeed <= 0) topSpeed = 0.3f;
+        if (baseTopSpeed <= 0) baseTopSpeed = 0.1f;
 
         if (rotationSpeed <= 0) rotationSpeed = 3.5f;
 
@@ -42,6 +43,8 @@ public class Character : MonoBehaviour {
         if (horizontalSpeedModifier <= 0) horizontalSpeedModifier = 0.8f;
 
         if (sprintSpeedModifier <= 0) sprintSpeedModifier = 0.5f;
+
+        topSpeed = baseTopSpeed;
 
         //get player's camera
         camera1  = transform.Find("Main Camera").GetComponent<Camera>();
@@ -99,7 +102,7 @@ public class Character : MonoBehaviour {
 
         //forward/backward movement
         if (Input.GetButton("Sprint")) {
-            moveDirection.z = Input.GetAxis("Vertical") * currentSpeed + Input.GetAxis("Vertical") * currentSpeed * sprintSpeedModifier;
+            //topSpeed = basetopSpeed *
         }
         else moveDirection.z = Input.GetAxis("Vertical") * currentSpeed;
 
@@ -117,10 +120,7 @@ public class Character : MonoBehaviour {
     }
 
     void animate() {
-        if (isControlling()) {
-            anim.SetBool("MOVING", true);
-        }
-        else  anim.SetBool("MOVING", false);
+        anim.SetFloat("Movement Speed", currentSpeed);
 
     }
 
