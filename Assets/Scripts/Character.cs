@@ -7,7 +7,9 @@ public class Character : MonoBehaviour {
 
     public Animator anim;
 
-    Camera camera1;
+    Camera playerCamera;
+
+    GameObject cameraOrbit;
 
     CharacterController cc;
 
@@ -15,10 +17,10 @@ public class Character : MonoBehaviour {
     public Transform projectileSpawnpoint;
 
     //player controller variables
-    public float accel, baseTopSpeed, rotationSpeed, jumpSpeed, horizontalSpeedModifier, gravity;
+    public float accel, decel, baseTopSpeed, rotationSpeed, jumpSpeed, horizontalSpeedModifier, gravity;
 
-    float currentSpeed = 0;
-    float topSpeed;
+    public float currentSpeed = 0;
+    public float topSpeed;
 
     /*calculates as a percentage of speed.
      A value of 1 would be 200% as fast.*/
@@ -27,6 +29,8 @@ public class Character : MonoBehaviour {
     float cameraRotation;
 
     Vector3 moveDirection = Vector3.zero;
+
+    List<SpeedBuff> speedBuffs;
 
     // Use this for initialization
     void Start () {
@@ -47,9 +51,15 @@ public class Character : MonoBehaviour {
         topSpeed = baseTopSpeed;
 
         //get player's camera
-        camera1  = transform.Find("Main Camera").GetComponent<Camera>();
 
+        cameraOrbit = GameObject.Find("Camera Orbit Point");
+
+        playerCamera = GameObject.Find("Main Camera").GetComponent<Camera>();
+
+        //get character controller
         cc = GetComponent<CharacterController>();
+
+        initializeLists();
     }
 
     // Update is called once per frame
@@ -64,11 +74,6 @@ public class Character : MonoBehaviour {
 
         motion();
 
-        //sprinting
-        //todo: animate camera fov
-        if (Input.GetButtonDown("Sprint")) camera1.fieldOfView += 15;
-        if (Input.GetButtonUp("Sprint")) camera1.fieldOfView -= 15;
-
         //bullets
         if (Input.GetButtonDown("Fire1")) fire();
     }
@@ -82,34 +87,25 @@ public class Character : MonoBehaviour {
 
         cameraRotation = Mathf.Clamp(cameraRotation, -90, 90);
 
-        camera1.transform.localEulerAngles = new Vector3(-cameraRotation, transform.localEulerAngles.x, transform.localEulerAngles.z);
+        cameraOrbit.transform.localEulerAngles = new Vector3(-cameraRotation, transform.localEulerAngles.x, transform.localEulerAngles.z);
     }
 
     void motion() {
-        //acceleration calculations
-        if (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0) {
-            //accelerate
-            currentSpeed += accel * Time.deltaTime;
+        acceleration();        
 
-            //current speed caps at top speed
-            if (currentSpeed > topSpeed) currentSpeed = topSpeed;
-        }
-        else currentSpeed = 0;
-
-        //moving and sprinting
-        //horizontal movement
+        //movement
+        moveDirection.z = Input.GetAxis("Vertical") * currentSpeed;
         moveDirection.x = Input.GetAxis("Horizontal") * currentSpeed * horizontalSpeedModifier;
 
-        //forward/backward movement
-        if (Input.GetButton("Sprint")) {
-            //topSpeed = basetopSpeed *
-        }
-        else moveDirection.z = Input.GetAxis("Vertical") * currentSpeed;
+        isInWater();
+        
+        sprint();        
 
         //jumping
-        if (Input.GetButtonDown("Jump") && cc.isGrounded) {
+        if (isJumping()) {
             moveDirection.y = 0;
             moveDirection.y = jumpSpeed;
+            Debug.Log("Jumping");
         }
 
         //gravity
@@ -119,17 +115,87 @@ public class Character : MonoBehaviour {
         cc.Move(moveDirection);
     }
 
+    //animates player
     void animate() {
         anim.SetFloat("Movement Speed", currentSpeed);
+        anim.SetBool("Moving", isMoving());
 
+        //figure out why this doesn't work
+        if (isJumping()) {
+            anim.SetTrigger("Jump");
+            Debug.Log("Jumping");
+        }
     }
 
-    bool isControlling() {
-        if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D)) return true;
-        else return false;
+    //acceleration calculations
+    void acceleration() {
+        if (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0) {
+            //accelerate
+            currentSpeed += accel * Time.deltaTime;
+
+            //current speed caps at top speed
+            if (currentSpeed > topSpeed) currentSpeed = topSpeed;
+        }
+        else {
+            currentSpeed = 0;
+            ////accelerate
+            //currentSpeed -= decel * Time.deltaTime;
+            ////current speed caps at 0
+            //if (currentSpeed <= 0) currentSpeed = 0;
+        }
+    }
+
+    //sprinting
+    private void sprint() {
+        //todo: animate camera fov
+        if (Input.GetButtonDown("Sprint")) playerCamera.fieldOfView += 15;
+        if (Input.GetButtonUp("Sprint")) playerCamera.fieldOfView -= 15;
+
+        if (Input.GetButton("Sprint")) topSpeed = baseTopSpeed + baseTopSpeed * sprintSpeedModifier;
+        else topSpeed = baseTopSpeed;
     }
 
     void fire() {
         if (projectilePrefab && projectileSpawnpoint) Instantiate(projectilePrefab, projectileSpawnpoint.position, projectileSpawnpoint.rotation);
+    }
+
+    private bool isInWater() {
+        if (speedBuffs.Contains(SpeedBuff s()))
+        if (transform.position.y <= 250) {
+            topSpeed /= 2;
+            Debug.Log(topSpeed);
+            return true;
+        }
+        topSpeed = baseTopSpeed;
+        return false;
+    }
+
+    //checks if moving
+    private bool isMoving() {
+        if (Mathf.Abs(moveDirection.x) + Mathf.Abs(moveDirection.y) + Mathf.Abs(moveDirection.z) == 0) return true;
+        return false;
+    }
+
+    //checks if jumping
+    private bool isJumping() {
+        if (Input.GetButtonDown("Jump") && cc.isGrounded) return true;
+        return false;
+    }
+
+    private float totalBuffValue(List<Buff> buffs) {
+        float total = 0;
+        for (int i = 0; i < buffs.Count; i++) {
+            Debug.Log(buffs[i].value);
+            total += buffs[i].value;
+        }
+        return total;
+    }
+
+    private void handleBuffs() {
+
+    }
+
+    private void initializeLists() {
+        speedBuffs = new List<SpeedBuff>();
     }
 }
