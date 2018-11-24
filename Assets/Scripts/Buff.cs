@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class Buff : MonoBehaviour {
+public abstract class Buff {
     public float value, totalDuration, remainingDuration;
 
     public string type, name;
 
-    public abstract void Run();
+    public void Run() {
+        if (remainingDuration > 0) remainingDuration -= Time.deltaTime;
+    }
 }

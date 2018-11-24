@@ -144,6 +144,9 @@ public class Character : MonoBehaviour {
             //if (currentSpeed <= 0) currentSpeed = 0;
         }
     }
+    void fire() {
+        if (projectilePrefab && projectileSpawnpoint) Instantiate(projectilePrefab, projectileSpawnpoint.position, projectileSpawnpoint.rotation);
+    }
 
     //sprinting
     private void sprint() {
@@ -155,17 +158,17 @@ public class Character : MonoBehaviour {
         else topSpeed = baseTopSpeed;
     }
 
-    void fire() {
-        if (projectilePrefab && projectileSpawnpoint) Instantiate(projectilePrefab, projectileSpawnpoint.position, projectileSpawnpoint.rotation);
-    }
-
     private bool isInWater() {
-        if (speedBuffs.Contains(SpeedBuff s()))
+        SpeedBuff inWater = new SpeedBuff("waterSlow", 0.5f, 0);        
+        
         if (transform.position.y <= 250) {
-            topSpeed /= 2;
+            if (!speedBuffs.Contains(inWater)){
+                speedBuffs.Add(inWater);
+            }
             Debug.Log(topSpeed);
             return true;
         }
+        speedBuffs.Remove(inWater);
         topSpeed = baseTopSpeed;
         return false;
     }
@@ -182,16 +185,18 @@ public class Character : MonoBehaviour {
         return false;
     }
 
-    private float totalBuffValue(List<Buff> buffs) {
+    private float totalBuffValue<T>(List<T>buffs) {
+
         float total = 0;
-        for (int i = 0; i < buffs.Count; i++) {
-            Debug.Log(buffs[i].value);
-            total += buffs[i].value;
-        }
+        //for (int i = 0; i < buffs.Count; i++) {
+        //    Debug.Log(buffs[i].value);
+        //    total += buffs[i].value;
+        //}
         return total;
     }
 
     private void handleBuffs() {
+        topSpeed = baseTopSpeed * totalBuffValue(speedBuffs);
 
     }
 
