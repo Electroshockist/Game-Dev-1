@@ -8,19 +8,23 @@ public class Character : MonoBehaviour {
     public Animator anim;
 
     Camera playerCamera;
-
     GameObject cameraOrbit;
-
     CharacterController cc;
 
-    public Projectile projectilePrefab;
-    public Transform projectileSpawnpoint;
+    [SerializeField]
+    private Stat health;
+
+    [SerializeField]
+    private Stat stamina;
+
+    float waterDamage = 1;
 
     //player controller variables
-    public float accel, decel, baseTopSpeed, rotationSpeed, jumpSpeed, horizontalSpeedModifier, gravity;
+    public Meter topSpeed = new Meter();
+    [SerializeField]
+    private float accel, decel, rotationSpeed, jumpSpeed, horizontalSpeedModifier, gravity;
 
-    public float currentSpeed = 0;
-    public float topSpeed;
+    private float currentSpeed = 0;
 
     /*calculates as a percentage of speed.
      A value of 1 would be 200% as fast.*/
@@ -34,30 +38,23 @@ public class Character : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        if (accel <= 0) accel = 0.3f;
-
-        if (gravity <= 0) gravity = -1.0f;
-
-        if (baseTopSpeed <= 0) baseTopSpeed = 0.1f;
-
-        if (rotationSpeed <= 0) rotationSpeed = 3.5f;
-
-        if (jumpSpeed <= 0) jumpSpeed = 0.5f;
-
-        if (horizontalSpeedModifier <= 0) horizontalSpeedModifier = 0.8f;
-
-        if (sprintSpeedModifier <= 0) sprintSpeedModifier = 0.5f;
-
-        topSpeed = baseTopSpeed;
-
         //get player's camera
-
         cameraOrbit = GameObject.Find("Camera Orbit Point");
-
         playerCamera = GameObject.Find("Main Camera").GetComponent<Camera>();
-
         //get character controller
         cc = GetComponent<CharacterController>();
+
+        if (health.MaxValue <= 0) health.MaxValue = 100;
+        if (accel <= 0) accel = 0.3f;
+        if (gravity <= 0) gravity = -1.0f;
+        if (topSpeed.baseValue <= 0) topSpeed.baseValue = 0.1f;
+        if (rotationSpeed <= 0) rotationSpeed = 3.5f;
+        if (jumpSpeed <= 0) jumpSpeed = 0.5f;
+        if (horizontalSpeedModifier <= 0) horizontalSpeedModifier = 0.8f;
+        if (sprintSpeedModifier <= 0) sprintSpeedModifier = 0.5f;
+
+        health.CurrentValue = health.MaxValue;
+        topSpeed.value = topSpeed.baseValue;
 
         initializeLists();
     }
@@ -69,13 +66,8 @@ public class Character : MonoBehaviour {
 	}
 
     void control() {
-
         rotation();
-
         motion();
-
-        //bullets
-        if (Input.GetButtonDown("Fire1")) fire();
     }
 
     void rotation() {
@@ -84,9 +76,7 @@ public class Character : MonoBehaviour {
 
         //clamped vertical camera rotation
         cameraRotation += Input.GetAxis("Mouse Y") * rotationSpeed;
-
         cameraRotation = Mathf.Clamp(cameraRotation, -90, 90);
-
         cameraOrbit.transform.localEulerAngles = new Vector3(-cameraRotation, transform.localEulerAngles.x, transform.localEulerAngles.z);
     }
 
@@ -97,8 +87,7 @@ public class Character : MonoBehaviour {
         moveDirection.z = Input.GetAxis("Vertical") * currentSpeed;
         moveDirection.x = Input.GetAxis("Horizontal") * currentSpeed * horizontalSpeedModifier;
 
-        isInWater();
-        
+        isInWater();        
         sprint();        
 
         //jumping
@@ -134,7 +123,7 @@ public class Character : MonoBehaviour {
             currentSpeed += accel * Time.deltaTime;
 
             //current speed caps at top speed
-            if (currentSpeed > topSpeed) currentSpeed = topSpeed;
+            if (currentSpeed > topSpeed.value) currentSpeed = topSpeed.value;
         }
         else {
             currentSpeed = 0;
@@ -144,9 +133,6 @@ public class Character : MonoBehaviour {
             //if (currentSpeed <= 0) currentSpeed = 0;
         }
     }
-    void fire() {
-        if (projectilePrefab && projectileSpawnpoint) Instantiate(projectilePrefab, projectileSpawnpoint.position, projectileSpawnpoint.rotation);
-    }
 
     //sprinting
     private void sprint() {
@@ -154,22 +140,22 @@ public class Character : MonoBehaviour {
         if (Input.GetButtonDown("Sprint")) playerCamera.fieldOfView += 15;
         if (Input.GetButtonUp("Sprint")) playerCamera.fieldOfView -= 15;
 
-        if (Input.GetButton("Sprint")) topSpeed = baseTopSpeed + baseTopSpeed * sprintSpeedModifier;
-        else topSpeed = baseTopSpeed;
+        if (Input.GetButton("Sprint"))  topSpeed.value= topSpeed.baseValue + topSpeed.baseValue * sprintSpeedModifier;
+        else  topSpeed.value= topSpeed.baseValue;
     }
 
     private bool isInWater() {
         SpeedBuff inWater = new SpeedBuff("waterSlow", 0.5f, 0);        
         
         if (transform.position.y <= 250) {
+            health.CurrentValue -= waterDamage * Time.deltaTime * (250 - transform.position.y);
             if (!speedBuffs.Contains(inWater)){
                 speedBuffs.Add(inWater);
             }
-            Debug.Log(topSpeed);
             return true;
         }
         speedBuffs.Remove(inWater);
-        topSpeed = baseTopSpeed;
+        topSpeed.value = topSpeed.baseValue;
         return false;
     }
 
@@ -196,8 +182,7 @@ public class Character : MonoBehaviour {
     }
 
     private void handleBuffs() {
-        topSpeed = baseTopSpeed * totalBuffValue(speedBuffs);
-
+         topSpeed.value= topSpeed.baseValue * totalBuffValue(speedBuffs);
     }
 
     private void initializeLists() {
