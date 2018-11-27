@@ -1,7 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
+//abstract parent buff class
 public abstract class Buff {
     public float value, totalDuration, remainingDuration;
 

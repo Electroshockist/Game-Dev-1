@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
+﻿//speed buff
 public class SpeedBuff : Buff {
 
     public SpeedBuff(string name, float value) {

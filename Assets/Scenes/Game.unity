@@ -948,8 +948,11 @@ MonoBehaviour:
     currentValue: 0
   stamina:
     meter: {fileID: 842225799}
-    maxValue: 10
+    maxValue: 0
     currentValue: 0
+  topSpeed:
+    value: 0
+    baseValue: 0
   accel: 0
   decel: 0
   rotationSpeed: 0
