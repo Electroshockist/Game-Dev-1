@@ -24,6 +24,7 @@ public class Character : MonoBehaviour {
     [SerializeField]
     private float accel, decel, rotationSpeed, jumpSpeed, horizontalSpeedModifier, gravity;
 
+    [SerializeField]
     private float currentSpeed = 0;
 
     /*calculates as a percentage of speed.
@@ -51,11 +52,11 @@ public class Character : MonoBehaviour {
         if (stamina.MaxValue <= 0) stamina.MaxValue = 100;
         if (accel <= 0) accel = 0.3f;
         if (gravity <= 0) gravity = -1.0f;
-        if (topSpeed.baseValue <= 0) topSpeed.baseValue = 0.1f;
+        if (topSpeed.baseValue <= 0) topSpeed.baseValue = 0.15f;
         if (rotationSpeed <= 0) rotationSpeed = 3.5f;
         if (jumpSpeed <= 0) jumpSpeed = 0.5f;
         if (horizontalSpeedModifier <= 0) horizontalSpeedModifier = 0.8f;
-        if (sprintSpeedModifier <= 0) sprintSpeedModifier = 0.5f;
+        if (sprintSpeedModifier <= 0) sprintSpeedModifier = 1.5f;
 
         health.CurrentValue = health.MaxValue;
         stamina.CurrentValue = stamina.MaxValue;
