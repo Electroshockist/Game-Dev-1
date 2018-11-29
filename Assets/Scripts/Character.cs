@@ -11,13 +11,16 @@ public class Character : MonoBehaviour {
     GameObject cameraOrbit;
     CharacterController cc;
 
+    public GameObject DeathScreen;
+
     [SerializeField]
     private Stat health, stamina;
 
     float waterDamage = 1;
 
     //player controller variables
-    public Meter topSpeed = new Meter();
+    [SerializeField]
+    private Meter topSpeed = new Meter();
     [SerializeField]
     private float accel, decel, rotationSpeed, jumpSpeed, horizontalSpeedModifier, gravity;
 
@@ -25,7 +28,8 @@ public class Character : MonoBehaviour {
 
     /*calculates as a percentage of speed.
      A value of 1 would be 200% as fast.*/
-    public float sprintSpeedModifier;
+    [SerializeField]
+    private float sprintSpeedModifier;
 
     float cameraRotation;
 
@@ -35,25 +39,54 @@ public class Character : MonoBehaviour {
 
     List<SpeedBuff> speedBuffs;
 
+    //initialize player values
+    private void Initialize() {
+        //get player's camera
+        cameraOrbit = GameObject.Find("Camera Orbit Point");
+        playerCamera = GameObject.Find("Main Camera").GetComponent<Camera>();
+        //get character controller
+        cc = GetComponent<CharacterController>();
+
+        if (health.MaxValue <= 0) health.MaxValue = 100;
+        if (stamina.MaxValue <= 0) stamina.MaxValue = 100;
+        if (accel <= 0) accel = 0.3f;
+        if (gravity <= 0) gravity = -1.0f;
+        if (topSpeed.baseValue <= 0) topSpeed.baseValue = 0.1f;
+        if (rotationSpeed <= 0) rotationSpeed = 3.5f;
+        if (jumpSpeed <= 0) jumpSpeed = 0.5f;
+        if (horizontalSpeedModifier <= 0) horizontalSpeedModifier = 0.8f;
+        if (sprintSpeedModifier <= 0) sprintSpeedModifier = 0.5f;
+
+        health.CurrentValue = health.MaxValue;
+        stamina.CurrentValue = stamina.MaxValue;
+
+        topSpeed.value = topSpeed.baseValue;
+
+        WaterSlow = new SpeedBuff("waterSlow", 0.5f, 0);
+        Sprint = new SpeedBuff("sprint", sprintSpeedModifier + 1, 0);
+
+        initializeLists();
+    }
+
     // Use this for initialization
-    void Start () {
+    private void Start () {
         Initialize();
     }
 
     // Update is called once per frame
-    void Update () {
+    private void Update () {
         handleBuffs();
         control();
         animate();
-        Debug.Log(speedBuffs.Count);
+        isDead();
 	}
 
-    void control() {
+    private void control() {
         rotation();
         motion();
     }
 
-    void rotation() {
+    private void rotation() {
         //body rotation
         transform.Rotate(0, Input.GetAxis("Mouse X") * rotationSpeed, 0);
 
@@ -63,7 +96,7 @@ public class Character : MonoBehaviour {
         cameraOrbit.transform.localEulerAngles = new Vector3(-cameraRotation, transform.localEulerAngles.x, transform.localEulerAngles.z);
     }
 
-    void motion() {
+    private void motion() {
         acceleration();        
 
         //movement
@@ -88,7 +121,7 @@ public class Character : MonoBehaviour {
     }
 
     //animates player
-    void animate() {
+    private void animate() {
         anim.SetFloat("Movement Speed", currentSpeed);
         anim.SetBool("Moving", isMoving());
 
@@ -100,7 +133,7 @@ public class Character : MonoBehaviour {
     }
 
     //acceleration calculations
-    void acceleration() {
+    private void acceleration() {
         if (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0) {
             //accelerate
             currentSpeed += accel * Time.deltaTime;
@@ -132,21 +165,19 @@ public class Character : MonoBehaviour {
 
     //sprinting
     private void sprint() {
+
         //todo: animate camera fov
         if (Input.GetButtonDown("Sprint")) playerCamera.fieldOfView += 15;
         if (Input.GetButtonUp("Sprint")) playerCamera.fieldOfView -= 15;
 
-        if (Input.GetButtonDown("Sprint") && speedBuffs.IndexOf(Sprint) < 0) {
-            speedBuffs.Add(Sprint);
-        }
+        if (Input.GetButtonDown("Sprint") && speedBuffs.IndexOf(Sprint) < 0) speedBuffs.Add(Sprint);        
 
-        else if (Input.GetButtonUp("Sprint") && speedBuffs.IndexOf(Sprint) >= 0) { }
-                speedBuffs.Remove(Sprint);
+        else if (Input.GetButtonUp("Sprint") && speedBuffs.IndexOf(Sprint) >= 0) speedBuffs.Remove(Sprint);
     }
 
     //checks if is in water
-    private void inWater() {       
-        
+    private void inWater() {
+
         if (transform.position.y <= 250) {
             health.CurrentValue -= waterDamage * Time.deltaTime * (250 - transform.position.y);
             if (speedBuffs.IndexOf(WaterSlow) < 0)
@@ -156,23 +187,18 @@ public class Character : MonoBehaviour {
             speedBuffs.Remove(WaterSlow);
     }
 
-    //private float totalBuffValue<T>(List<T>buffs) {
-
-    //    float total = 0;
-
-    //    for (int i = 0; i < buffs.Count; i++) {
-    //        Debug.Log(buffs[i].value);
-    //        total += buffs[i].value;
-    //    }
-
-    //    return total;
-    //}
+    private bool isDead() {
+        if (health.CurrentValue <= 0) {
+            DeathScreen.SetActive(true);
+            return true;
+        }
+        return false;
+    }
 
     private float totalBuffValue(List<SpeedBuff> buffs) {
         float total = 0;
 
         for (int i = 0; i < buffs.Count; i++) {
-            Debug.Log(buffs[i].name);
             total += buffs[i].value;
         }
 
@@ -192,32 +218,7 @@ public class Character : MonoBehaviour {
         speedBuffs = new List<SpeedBuff>();
     }
 
-    //initialize player values
-    private void Initialize() {
-        //get player's camera
-        cameraOrbit = GameObject.Find("Camera Orbit Point");
-        playerCamera = GameObject.Find("Main Camera").GetComponent<Camera>();
-        //get character controller
-        cc = GetComponent<CharacterController>();
-
-        if (health.MaxValue <= 0) health.MaxValue = 100;
-        if (stamina.MaxValue <= 0) stamina.MaxValue = 100;
-        if (accel <= 0) accel = 0.3f;
-        if (gravity <= 0) gravity = -1.0f;
-        if (topSpeed.baseValue <= 0) topSpeed.baseValue = 0.1f;
-        if (rotationSpeed <= 0) rotationSpeed = 3.5f;
-        if (jumpSpeed <= 0) jumpSpeed = 0.5f;
-        if (horizontalSpeedModifier <= 0) horizontalSpeedModifier = 0.8f;
-        if (sprintSpeedModifier <= 0) sprintSpeedModifier = 1.5f;
-
-        health.CurrentValue = health.MaxValue;
-        stamina.CurrentValue = stamina.MaxValue;
-
-        topSpeed.value = topSpeed.baseValue;
-
-        WaterSlow = new SpeedBuff("waterSlow", 0.5f, 0);
-        Sprint = new SpeedBuff("sprint", sprintSpeedModifier, 0);
-
-        initializeLists();
+    public void Damage(float damage) {
+        health.CurrentValue -= damage;
     }
 }
