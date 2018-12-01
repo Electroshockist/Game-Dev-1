@@ -3,29 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public class Character : MonoBehaviour {
-
-    public Animator anim;
+public class Character : Entity {
 
     Camera playerCamera;
     GameObject cameraOrbit;
-    CharacterController cc;
 
     public GameObject DeathScreen;
 
     [SerializeField]
-    private Stat health, stamina;
+    private Stat stamina;
 
-    float waterDamage = 1;
-
-    //player controller variables
-    [SerializeField]
-    private Meter topSpeed = new Meter();
-    [SerializeField]
-    private float accel, decel, rotationSpeed, jumpSpeed, horizontalSpeedModifier, gravity;
-
-    [SerializeField]
-    private float currentSpeed = 0;
+    const float waterDamage = 1;
 
     /*calculates as a percentage of speed.
      A value of 1 would be 200% as fast.*/
@@ -34,24 +22,22 @@ public class Character : MonoBehaviour {
 
     float cameraRotation;
 
-    Vector3 moveDirection = Vector3.zero;
-
     SpeedBuff WaterSlow, Sprint;
 
     List<SpeedBuff> speedBuffs;
 
     //initialize player values
-    private void Initialize() {
+    protected override void Initialize() {
+        //get parent's variables
+        base.Initialize();
+
         //get player's camera
         cameraOrbit = GameObject.Find("Camera Orbit Point");
         playerCamera = GameObject.Find("Main Camera").GetComponent<Camera>();
-        //get character controller
-        cc = GetComponent<CharacterController>();
 
         if (health.MaxValue <= 0) health.MaxValue = 100;
         if (stamina.MaxValue <= 0) stamina.MaxValue = 100;
         if (accel <= 0) accel = 0.3f;
-        if (gravity <= 0) gravity = -1.0f;
         if (topSpeed.baseValue <= 0) topSpeed.baseValue = 0.15f;
         if (rotationSpeed <= 0) rotationSpeed = 3.5f;
         if (jumpSpeed <= 0) jumpSpeed = 0.5f;
@@ -75,11 +61,12 @@ public class Character : MonoBehaviour {
     }
 
     // Update is called once per frame
-    private void Update () {
+    protected override void Update () {
+        base.Update();
         handleBuffs();
         control();
-        animate();
-        isDead();
+        DeathScreen.SetActive(isDead());
+        
 	}
 
     private void control() {
@@ -97,12 +84,23 @@ public class Character : MonoBehaviour {
         cameraOrbit.transform.localEulerAngles = new Vector3(-cameraRotation, transform.localEulerAngles.x, transform.localEulerAngles.z);
     }
 
+    protected override Vector3 MotionAxis() {
+        Vector3 inputs = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Horizontal"));
+
+        if (isJumping()) inputs.y = 1;
+        else inputs.y = 0;
+
+        return inputs;
+    }
+
     private void motion() {
         acceleration();        
 
         //movement
         moveDirection.z = Input.GetAxis("Vertical") * currentSpeed;
         moveDirection.x = Input.GetAxis("Horizontal") * currentSpeed * horizontalSpeedModifier;
+
+        Debug.Log(Input.GetAxis("Horizontal"));
 
         inWater();        
         sprint();        
@@ -114,15 +112,11 @@ public class Character : MonoBehaviour {
             Debug.Log("Jumping");
         }
 
-        //gravity
-        if (!cc.isGrounded) moveDirection.y += gravity * Time.deltaTime;
-
         moveDirection = transform.TransformDirection(moveDirection);
-        cc.Move(moveDirection);
     }
 
     //animates player
-    private void animate() {
+    protected override void Animate() {
         anim.SetFloat("Movement Speed", currentSpeed);
         anim.SetBool("Moving", isMoving());
 
@@ -151,7 +145,6 @@ public class Character : MonoBehaviour {
         }
     }
 
-
     //checks if moving
     private bool isMoving() {
         if (Mathf.Abs(moveDirection.x) + Mathf.Abs(moveDirection.y) + Mathf.Abs(moveDirection.z) == 0) return true;
@@ -160,7 +153,7 @@ public class Character : MonoBehaviour {
 
     //checks if jumping
     private bool isJumping() {
-        if (Input.GetButtonDown("Jump") && cc.isGrounded) return true;
+        //if (Input.GetButtonDown("Jump") && cc.isGrounded) return true;
         return false;
     }
 
@@ -190,7 +183,6 @@ public class Character : MonoBehaviour {
 
     private bool isDead() {
         if (health.CurrentValue <= 0) {
-            DeathScreen.SetActive(true);
             return true;
         }
         return false;
