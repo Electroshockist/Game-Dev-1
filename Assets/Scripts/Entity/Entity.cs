@@ -26,6 +26,9 @@ public abstract class Entity : MonoBehaviour {
     protected Meter topSpeed = new Meter();
 
     [SerializeField]
+    protected bool isGrounded;
+
+    [SerializeField]
     protected Vector3 moveDirection = Vector3.zero;
 
     // Use this for initialization
@@ -46,6 +49,9 @@ public abstract class Entity : MonoBehaviour {
     }
 
     protected void Move(Vector3 v) {
+        //accelerate/deceleate
+        Acceleration();
+
         //forward/backward speed
         moveDirection.z = v.z * currentSpeed;
 
@@ -53,9 +59,37 @@ public abstract class Entity : MonoBehaviour {
         moveDirection.x = v.x * currentSpeed * horizontalSpeedModifier;
 
         //upward/downward speed
-        rb.AddForce(0, v.y * jumpSpeed, 0, ForceMode.Impulse);
+        if (jumpSpeed != 0) rb.AddForce(0, rb.velocity.y + v.y * jumpSpeed, 0, ForceMode.Impulse);
+
+        moveDirection = transform.TransformDirection(moveDirection);
 
         rb.velocity =  moveDirection;
+    }
+
+    //acceleration calculations
+    private void Acceleration() {
+        if (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0) {
+            //accelerate
+            currentSpeed += accel * Time.deltaTime;
+
+            //current speed caps at top speed
+            if (currentSpeed > topSpeed.value) currentSpeed = topSpeed.value;
+        }
+        else {
+            currentSpeed = 0;
+            ////accelerate
+            //currentSpeed -= decel * Time.deltaTime;
+            ////current speed caps at 0
+            //if (currentSpeed <= 0) currentSpeed = 0;
+        }
+    }
+
+    //ground checkers
+    private void OnCollisionStay(Collision collision) {
+        isGrounded = true;
+    }
+    private void OnCollisionExit(Collision collision) {
+        isGrounded = false;
     }
 
     protected abstract void Animate();

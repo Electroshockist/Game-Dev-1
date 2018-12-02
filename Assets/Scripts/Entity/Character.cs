@@ -37,10 +37,10 @@ public class Character : Entity {
 
         if (health.MaxValue <= 0) health.MaxValue = 100;
         if (stamina.MaxValue <= 0) stamina.MaxValue = 100;
-        if (accel <= 0) accel = 0.3f;
-        if (topSpeed.baseValue <= 0) topSpeed.baseValue = 0.15f;
+        if (accel <= 0) accel = 3f;
+        if (topSpeed.baseValue <= 0) topSpeed.baseValue = 5f;
         if (rotationSpeed <= 0) rotationSpeed = 3.5f;
-        if (jumpSpeed <= 0) jumpSpeed = 0.5f;
+        if (jumpSpeed <= 0) jumpSpeed = 10f;
         if (horizontalSpeedModifier <= 0) horizontalSpeedModifier = 0.8f;
         if (sprintSpeedModifier <= 0) sprintSpeedModifier = 1.5f;
 
@@ -71,7 +71,10 @@ public class Character : Entity {
 
     private void control() {
         rotation();
-        motion();
+        //motion();
+        if (Input.GetKeyDown(KeyCode.T)) {
+            transform.position += new Vector3(0, 100, 0);
+        }
     }
 
     private void rotation() {
@@ -85,7 +88,7 @@ public class Character : Entity {
     }
 
     protected override Vector3 MotionAxis() {
-        Vector3 inputs = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Horizontal"));
+        Vector3 inputs = new Vector3(Input.GetAxis("Horizontal"), rb.velocity.y, Input.GetAxis("Vertical"));
 
         if (isJumping()) inputs.y = 1;
         else inputs.y = 0;
@@ -94,13 +97,7 @@ public class Character : Entity {
     }
 
     private void motion() {
-        acceleration();        
-
-        //movement
-        moveDirection.z = Input.GetAxis("Vertical") * currentSpeed;
-        moveDirection.x = Input.GetAxis("Horizontal") * currentSpeed * horizontalSpeedModifier;
-
-        Debug.Log(Input.GetAxis("Horizontal"));
+        //acceleration();
 
         inWater();        
         sprint();        
@@ -111,8 +108,6 @@ public class Character : Entity {
             moveDirection.y = jumpSpeed;
             Debug.Log("Jumping");
         }
-
-        moveDirection = transform.TransformDirection(moveDirection);
     }
 
     //animates player
@@ -120,40 +115,20 @@ public class Character : Entity {
         anim.SetFloat("Movement Speed", currentSpeed);
         anim.SetBool("Moving", isMoving());
 
-        //figure out why this doesn't work
         if (isJumping()) {
             anim.SetTrigger("Jump");
-            Debug.Log("Jumping");
-        }
-    }
-
-    //acceleration calculations
-    private void acceleration() {
-        if (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0) {
-            //accelerate
-            currentSpeed += accel * Time.deltaTime;
-
-            //current speed caps at top speed
-            if (currentSpeed > topSpeed.value) currentSpeed = topSpeed.value;
-        }
-        else {
-            currentSpeed = 0;
-            ////accelerate
-            //currentSpeed -= decel * Time.deltaTime;
-            ////current speed caps at 0
-            //if (currentSpeed <= 0) currentSpeed = 0;
         }
     }
 
     //checks if moving
     private bool isMoving() {
-        if (Mathf.Abs(moveDirection.x) + Mathf.Abs(moveDirection.y) + Mathf.Abs(moveDirection.z) == 0) return true;
+        if (Mathf.Abs(moveDirection.x) + Mathf.Abs(moveDirection.y) + Mathf.Abs(moveDirection.z) != 0) return true;
         return false;
     }
 
     //checks if jumping
     private bool isJumping() {
-        //if (Input.GetButtonDown("Jump") && cc.isGrounded) return true;
+        if (Input.GetButtonDown("Jump") && isGrounded) return true;
         return false;
     }
 
@@ -192,6 +167,7 @@ public class Character : Entity {
         float total = 0;
 
         for (int i = 0; i < buffs.Count; i++) {
+            Debug.Log(buffs[i].name);
             total += buffs[i].value;
         }
 
