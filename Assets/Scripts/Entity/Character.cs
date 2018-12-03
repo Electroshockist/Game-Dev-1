@@ -37,10 +37,10 @@ public class Character : Entity {
 
         if (health.MaxValue <= 0) health.MaxValue = 100;
         if (stamina.MaxValue <= 0) stamina.MaxValue = 100;
-        if (accel <= 0) accel = 3f;
+        if (accel <= 0) accel = 10f;
         if (topSpeed.baseValue <= 0) topSpeed.baseValue = 5f;
         if (rotationSpeed <= 0) rotationSpeed = 3.5f;
-        if (jumpSpeed <= 0) jumpSpeed = 10f;
+        if (jumpSpeed <= 0) jumpSpeed = 0.5f;
         if (horizontalSpeedModifier <= 0) horizontalSpeedModifier = 0.8f;
         if (sprintSpeedModifier <= 0) sprintSpeedModifier = 1.5f;
 
@@ -71,7 +71,8 @@ public class Character : Entity {
 
     private void control() {
         rotation();
-        //motion();
+        motion();
+
         if (Input.GetKeyDown(KeyCode.T)) {
             transform.position += new Vector3(0, 100, 0);
         }
@@ -97,17 +98,15 @@ public class Character : Entity {
     }
 
     private void motion() {
-        //acceleration();
-
         inWater();        
         sprint();        
 
         //jumping
         if (isJumping()) {
-            moveDirection.y = 0;
             moveDirection.y = jumpSpeed;
             Debug.Log("Jumping");
         }
+        else moveDirection.y = 0;
     }
 
     //animates player
