@@ -85,10 +85,12 @@ public abstract class Entity : MonoBehaviour {
     }
 
     //ground checkers
-    private void OnCollisionStay(Collision collision) {
+
+    private void OnTriggerStay(Collider collision) {
         isGrounded = true;
     }
-    private void OnCollisionExit(Collision collision) {
+
+    private void OnTriggerExit(Collider collision) {
         isGrounded = false;
     }
 

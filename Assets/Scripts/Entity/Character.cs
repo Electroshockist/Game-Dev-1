@@ -40,7 +40,7 @@ public class Character : Entity {
         if (accel <= 0) accel = 10f;
         if (topSpeed.baseValue <= 0) topSpeed.baseValue = 5f;
         if (rotationSpeed <= 0) rotationSpeed = 3.5f;
-        if (jumpSpeed <= 0) jumpSpeed = 0.5f;
+        if (jumpSpeed <= 0) jumpSpeed = 2.5f;
         if (horizontalSpeedModifier <= 0) horizontalSpeedModifier = 0.8f;
         if (sprintSpeedModifier <= 0) sprintSpeedModifier = 1.5f;
 
@@ -163,11 +163,11 @@ public class Character : Entity {
     }
 
     private float totalBuffValue(List<SpeedBuff> buffs) {
-        float total = 0;
+        float total = 1;
 
         for (int i = 0; i < buffs.Count; i++) {
             Debug.Log(buffs[i].name);
-            total += buffs[i].value;
+            total *= buffs[i].value;
         }
 
         return total;
@@ -179,7 +179,6 @@ public class Character : Entity {
             return;
         }
         topSpeed.value = topSpeed.baseValue * totalBuffValue(speedBuffs);
-        Debug.Log(totalBuffValue(speedBuffs));
     }
 
     private void initializeLists() {
