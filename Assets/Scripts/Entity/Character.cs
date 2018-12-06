@@ -166,7 +166,6 @@ public class Character : Entity {
         float total = 1;
 
         for (int i = 0; i < buffs.Count; i++) {
-            Debug.Log(buffs[i].name);
             total *= buffs[i].value;
         }
 
