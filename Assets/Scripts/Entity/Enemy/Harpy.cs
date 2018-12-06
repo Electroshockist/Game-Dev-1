@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Cyclops : Enemy {
+public class Harpy : Enemy {
 
     // Use this for initialization
     protected override void Start () {
         base.Start();
-        animManagers.Add(new AnimationHandler("2HitComboAttackForward", anim));
-    }
+        animManagers.Add(new AnimationHandler("attack1Forward", anim));
+	}
 
     // Update is called once per frame
     protected override void Update () {
