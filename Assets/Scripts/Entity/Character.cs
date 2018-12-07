@@ -104,7 +104,6 @@ public class Character : Entity {
         //jumping
         if (isJumping()) {
             moveDirection.y = jumpSpeed;
-            Debug.Log("Jumping");
         }
         else moveDirection.y = 0;
     }

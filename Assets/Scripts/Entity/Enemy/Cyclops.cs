@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Cyclops : Enemy {
+public class Cyclops : Melee {
 
     // Use this for initialization
     protected override void Start () {
@@ -12,9 +12,9 @@ public class Cyclops : Enemy {
 
     // Update is called once per frame
     protected override void Update () {
-        if (getDistance() <= noticeRadius) agent.SetDestination(targetPos.position);
 
         if (getDistance() <= attackRadius && !animManagers[0].WaitToPlay()) anim.SetTrigger("Attack");
+        else Follow();
 
         base.Update();
     }

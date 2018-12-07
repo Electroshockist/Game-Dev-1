@@ -3,22 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Projectile : MonoBehaviour {
-    public float projectileLifetime, projectileForce;
-    Rigidbody rb;
-    CharacterController rootCc;
+    public float damage;
 
-	// Use this for initialization
-	void Start () {
-        rootCc = GameObject.Find("Character").GetComponent<CharacterController>();
+    void Start() {
+        var tm = GetComponentInChildren<RFX4_TransformMotion>(true);
+        if (tm != null) tm.CollisionEnter += Tm_CollisionEnter;
+        if (damage == 0) damage = 3;
+    }
 
-        if (projectileLifetime <= 0) projectileLifetime = 5.0f;
-        if (projectileForce <= 0) projectileForce = 10.0f;
-
-        rb = GetComponent<Rigidbody>();
-        if (!rb) rb = gameObject.AddComponent<Rigidbody>();
-
-        rb.AddForce(transform.forward * projectileForce + rootCc.velocity, ForceMode.Impulse);
-
-        Destroy(gameObject, projectileLifetime);		
-	}
+    private void Tm_CollisionEnter(object sender, RFX4_TransformMotion.RFX4_CollisionInfo e) {
+        if(e.Hit.transform.tag == "Player") {
+            e.Hit.transform.gameObject.GetComponent<Character>().Damage(10);
+        }
+    }
 }
