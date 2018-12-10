@@ -23,6 +23,7 @@ public class RFX4_DeactivateByTime : MonoBehaviour {
     // Update is called once per frame
     void DeactivateThis()
     {
-        gameObject.SetActive(false);
+        //gameObject.SetActive(false);
+        Destroy(gameObject);
 	}
 }

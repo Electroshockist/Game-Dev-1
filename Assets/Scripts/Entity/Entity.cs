@@ -10,9 +10,6 @@ public abstract class Entity : MonoBehaviour {
     [SerializeField]
     protected Animator anim;
 
-    [SerializeField]
-    protected Stat health;
-
     protected abstract Vector3 MotionAxis();
 
     [SerializeField]

@@ -8,23 +8,31 @@ public class Character : Entity {
     Camera playerCamera;
     GameObject cameraOrbit;
 
+    [SerializeField]
+    public GameObject WinScreen;
+
+    [SerializeField]
     public GameObject DeathScreen;
+
+    [SerializeField]
+    private Stat health;
 
     [SerializeField]
     private Stat stamina;
 
-    const float waterDamage = 1;
 
-    /*calculates as a percentage of speed.
-     A value of 1 would be 200% as fast.*/
     [SerializeField]
-    private float sprintSpeedModifier;
+    float lerpedSpeed;
+
+    [SerializeField]
+    /*calculates as a percentage of speed.
+    A value of 1 would be 200% as fast.*/
+    private float sprintSpeedModifier, waterSlow;
 
     float cameraRotation;
 
-    SpeedBuff WaterSlow, Sprint;
-
-    List<SpeedBuff> speedBuffs;
+    //internal speed buffs
+    SpeedBuff Sprint, WaterSlow;
 
     //initialize player values
     protected override void Initialize() {
@@ -43,31 +51,31 @@ public class Character : Entity {
         if (jumpSpeed <= 0) jumpSpeed = 2.5f;
         if (horizontalSpeedModifier <= 0) horizontalSpeedModifier = 0.8f;
         if (sprintSpeedModifier <= 0) sprintSpeedModifier = 1.5f;
+        if (waterSlow <= 0) waterSlow = 0.5f;
+
+        //sprintSpeedModifier will aslways be greater or equal to 1(100%)
+        sprintSpeedModifier++;
 
         health.CurrentValue = health.MaxValue;
         stamina.CurrentValue = stamina.MaxValue;
 
         topSpeed.value = topSpeed.baseValue;
-
-        WaterSlow = new SpeedBuff("waterSlow", 0.5f, 0);
-        Sprint = new SpeedBuff("sprint", sprintSpeedModifier + 1, 0);
-
-        initializeLists();
     }
-
+    private void Awake() {
+        health.Initilaize();
+    }
     // Use this for initialization
-    private void Start () {
+    private void Start() {
         Initialize();
     }
 
     // Update is called once per frame
-    protected override void Update () {
+    protected override void Update() {
         base.Update();
-        handleBuffs();
+        handleBuffs(topSpeed, getBuffs<SpeedBuff>());
         control();
         DeathScreen.SetActive(isDead());
-        
-	}
+    }
 
     private void control() {
         rotation();
@@ -98,8 +106,8 @@ public class Character : Entity {
     }
 
     private void motion() {
-        inWater();        
-        sprint();        
+        inWater();
+        sprint();
 
         //jumping
         if (isJumping()) {
@@ -110,7 +118,8 @@ public class Character : Entity {
 
     //animates player
     protected override void Animate() {
-        anim.SetFloat("Movement Speed", currentSpeed);
+        lerpedSpeed = currentSpeed / topSpeed.baseValue;
+        anim.SetFloat("Movement Speed", lerpedSpeed);
         anim.SetBool("Moving", isMoving());
 
         if (isJumping()) {
@@ -134,24 +143,81 @@ public class Character : Entity {
     private void sprint() {
 
         //todo: animate camera fov
-        if (Input.GetButtonDown("Sprint")) playerCamera.fieldOfView += 15;
-        if (Input.GetButtonUp("Sprint")) playerCamera.fieldOfView -= 15;
-
-        if (Input.GetButtonDown("Sprint") && speedBuffs.IndexOf(Sprint) < 0) speedBuffs.Add(Sprint);        
-
-        else if (Input.GetButtonUp("Sprint") && speedBuffs.IndexOf(Sprint) >= 0) speedBuffs.Remove(Sprint);
+        if (Input.GetButtonDown("Sprint")) {
+            playerCamera.fieldOfView += 15;
+            if(!buffExists(Sprint)) Sprint = createBuff<SpeedBuff>("Sprint", sprintSpeedModifier);
+        }
+        if (Input.GetButtonUp("Sprint")) {
+            playerCamera.fieldOfView -= 15;
+            removeBuff(Sprint);
+        }
     }
 
     //checks if is in water
     private void inWater() {
 
         if (transform.position.y <= 250) {
-            health.CurrentValue -= waterDamage * Time.deltaTime * (250 - transform.position.y);
-            if (speedBuffs.IndexOf(WaterSlow) < 0)
-                speedBuffs.Add(WaterSlow);
+            //damage while in water based off of deapth
+            health.CurrentValue -= Time.deltaTime * (250 - transform.position.y);
+
+            if (!buffExists(WaterSlow)) WaterSlow = createBuff<SpeedBuff>("Water Slow", waterSlow);
         }
-        else if (speedBuffs.IndexOf(WaterSlow) >= 0)
-            speedBuffs.Remove(WaterSlow);
+        else removeBuff(WaterSlow);
+    }
+
+    private void handleBuffs<T,U>(T value, List<U> list) where T : Meter where U : Buff {
+        if (list.Count == 0) {
+            value.value = value.baseValue;
+            return;
+        }
+        value.value = value.baseValue * TotalBuffValue(list);
+    }
+
+    //get total buff value
+    private float TotalBuffValue<T>(List<T> buffs) where T : Buff{
+        //total wil be multiplied by each buff value in the list
+        float total = 1;
+
+        for (int i = 0; i < buffs.Count; i++) {
+            total *= buffs[i].Value;
+        }
+
+        return total;
+    }
+
+    //get buffs of a generic type Buff
+    private List<T> getBuffs<T>() where T : Buff{
+        var buffs = FindObjectsOfType<T>();
+        return new List<T>(buffs);
+    }
+
+    public T createBuff<T>(string name, float value) where T : Buff{
+        T buff = gameObject.AddComponent<T>();
+        buff.Create(name, value);
+        return buff;
+    }
+
+    public T createBuff<T>(string name, float value, float duration) where T : Buff {
+        T buff = gameObject.AddComponent<T>();
+        buff.Create(name, value, duration);
+        return buff;
+    }
+
+    private bool buffExists<T>(T buff) where T : Buff {
+        if(getBuffs<T>().IndexOf(buff) < 0) return false;
+        return true;
+    }
+
+    private void removeBuff<T>(T buff) where T : Buff {
+        if (buffExists(buff)) Destroy(buff);
+    }
+
+    public void Heal(float heal) {
+        health.CurrentValue += heal;
+    }
+
+    public void Damage(float damage) {
+        health.CurrentValue -= damage;
     }
 
     private bool isDead() {
@@ -159,31 +225,5 @@ public class Character : Entity {
             return true;
         }
         return false;
-    }
-
-    private float totalBuffValue(List<SpeedBuff> buffs) {
-        float total = 1;
-
-        for (int i = 0; i < buffs.Count; i++) {
-            total *= buffs[i].value;
-        }
-
-        return total;
-    }
-
-    private void handleBuffs() {
-        if (speedBuffs.Count == 0) {
-            topSpeed.value = topSpeed.baseValue;
-            return;
-        }
-        topSpeed.value = topSpeed.baseValue * totalBuffValue(speedBuffs);
-    }
-
-    private void initializeLists() {
-        speedBuffs = new List<SpeedBuff>();
-    }
-
-    public void Damage(float damage) {
-        health.CurrentValue -= damage;
     }
 }
