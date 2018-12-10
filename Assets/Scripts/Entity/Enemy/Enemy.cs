@@ -12,6 +12,8 @@ public abstract class Enemy : MonoBehaviour {
     protected Character target;
     protected Transform targetPos;
     protected NavMeshAgent agent;
+    [SerializeField]
+    public Patrol p;
 
     //handle animations
     protected List<AnimationHandler> animManagers = new List<AnimationHandler>();
@@ -21,11 +23,11 @@ public abstract class Enemy : MonoBehaviour {
         target = PlayerManager.instance.player.GetComponent<Character>();
         targetPos = target.transform;
         agent = GetComponent<NavMeshAgent>();
+        p = new Patrol(agent);
 
         if (noticeRadius <= 0) noticeRadius = 10f;
         if (attackRadius <= 0) attackRadius = 2f;
         if (damage <= 0) damage = 15f;
-
         agent.stoppingDistance = attackRadius;	
 	}
 
