@@ -6,7 +6,7 @@ public class WinBall : MonoBehaviour {
 
     private void OnTriggerEnter(Collider other) {
         if (other.tag == "Player") {
-            other.GetComponent<Character>().WinScreen.SetActive(true);
+            other.GetComponentInParent<Character>().WinScreen.SetActive(true);
             Destroy(gameObject);
         }
     }

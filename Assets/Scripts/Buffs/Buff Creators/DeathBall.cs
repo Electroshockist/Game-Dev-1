@@ -6,7 +6,7 @@ public class DeathBall : MonoBehaviour {
 
     private void OnTriggerEnter(Collider other) {
         if (other.tag == "Player") {
-            other.GetComponent<Character>().Damage(1000);
+            other.GetComponentInParent<Character>().Damage(1000);
             Destroy(gameObject);
         }
     }

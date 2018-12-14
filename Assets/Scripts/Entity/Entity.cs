@@ -70,7 +70,7 @@ public abstract class Entity : MonoBehaviour {
             currentSpeed += accel * Time.deltaTime;
 
             //current speed caps at top speed
-            if (currentSpeed > topSpeed.value) currentSpeed = topSpeed.value;
+            if (currentSpeed > topSpeed.Value) currentSpeed = topSpeed.Value;
         }
         else {
             currentSpeed = 0;

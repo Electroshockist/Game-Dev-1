@@ -7,8 +7,12 @@ public class Damager : MonoBehaviour{
     public float damage;
 
     private void OnTriggerEnter(Collider c) {
-        if (c.tag == "Player") {
-            c.GetComponent<Character>().Damage(damage);
+        //if on player, don't hurt player
+        if(tag == "Friendly") {
+            if(c.tag == "Enemy") c.GetComponentInParent<Enemy>().Damage(damage);
+        } 
+        else if (c.tag == "Player") {
+            c.GetComponentInParent<Character>().Damage(damage);
         }
     }
 }

@@ -20,14 +20,14 @@ public class Character : Entity {
     [SerializeField]
     private Stat stamina;
 
-
-    [SerializeField]
     float lerpedSpeed;
 
-    [SerializeField]
     /*calculates as a percentage of speed.
     A value of 1 would be 200% as fast.*/
     private float sprintSpeedModifier, waterSlow;
+
+    //handle animations
+    private List<AnimationHandler> animManagers = new List<AnimationHandler>();
 
     float cameraRotation;
 
@@ -38,6 +38,8 @@ public class Character : Entity {
     protected override void Initialize() {
         //get parent's variables
         base.Initialize();
+
+        animManagers.Add(new AnimationHandler("Stable Sword Outward Slash", anim));
 
         //get player's camera
         cameraOrbit = GameObject.Find("Camera Orbit Point");
@@ -59,7 +61,7 @@ public class Character : Entity {
         health.CurrentValue = health.MaxValue;
         stamina.CurrentValue = stamina.MaxValue;
 
-        topSpeed.value = topSpeed.baseValue;
+        topSpeed.Value = topSpeed.baseValue;
     }
     private void Awake() {
         health.Initilaize();
@@ -71,10 +73,24 @@ public class Character : Entity {
 
     // Update is called once per frame
     protected override void Update() {
-        base.Update();
+        if (!Attack()) {
+            base.Update();
+        }
         handleBuffs(topSpeed, getBuffs<SpeedBuff>());
-        control();
+
+        
+            control();
         DeathScreen.SetActive(isDead());
+    }
+
+    private bool Attack() {
+        if (Input.GetButtonDown("Fire1") && !animManagers[0].WaitToPlay()) {
+            anim.SetTrigger("Attack");
+            return true;
+        }
+        else if (animManagers[0].WaitToPlay()) return true;
+        return false;
+
     }
 
     private void control() {
@@ -167,10 +183,10 @@ public class Character : Entity {
 
     private void handleBuffs<T,U>(T value, List<U> list) where T : Meter where U : Buff {
         if (list.Count == 0) {
-            value.value = value.baseValue;
+            value.Value = value.baseValue;
             return;
         }
-        value.value = value.baseValue * TotalBuffValue(list);
+        value.Value = value.baseValue * TotalBuffValue(list);
     }
 
     //get total buff value

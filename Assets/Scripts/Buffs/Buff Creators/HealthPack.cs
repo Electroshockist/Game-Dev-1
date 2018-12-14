@@ -7,7 +7,7 @@ public class HealthPack : MonoBehaviour {
     private float heal = 10;
     private void OnTriggerEnter(Collider other) {
         if (other.tag == "Player") {
-            other.GetComponent<Character>().Heal(heal);
+            other.GetComponentInParent<Character>().Heal(heal);
             Destroy(gameObject);
         }
     }

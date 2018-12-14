@@ -13,6 +13,9 @@ public abstract class Enemy : MonoBehaviour {
     protected Transform targetPos;
     protected NavMeshAgent agent;
 
+    [SerializeField]
+    protected Meter health;
+
     //handle animations
     protected List<AnimationHandler> animManagers = new List<AnimationHandler>();
 
@@ -21,6 +24,8 @@ public abstract class Enemy : MonoBehaviour {
         target = PlayerManager.instance.player.GetComponent<Character>();
         targetPos = target.transform;
         agent = GetComponent<NavMeshAgent>();
+
+        health.Initilaize();
 
         if (noticeRadius <= 0) noticeRadius = 10f;
         if (attackRadius <= 0) attackRadius = 2f;
@@ -31,8 +36,11 @@ public abstract class Enemy : MonoBehaviour {
 
     // Update is called once per frame
     protected virtual void Update () {
-        if (getDistance() <= noticeRadius) agent.SetDestination(targetPos.position);
-        Animate();
+        if (isDead()) { }
+        else {
+            if (getDistance() <= noticeRadius) agent.SetDestination(targetPos.position);
+            Animate();
+        }
     }
 
     protected void RotateTowards() {
@@ -63,5 +71,16 @@ public abstract class Enemy : MonoBehaviour {
         Gizmos.DrawWireSphere(transform.position, noticeRadius);
         Gizmos.color = Color.magenta;
         Gizmos.DrawWireSphere(transform.position, attackRadius);
+    }
+
+    public void Damage(float damage) {
+        health.Value -= damage;
+    }
+
+    private bool isDead() {
+        if (health.Value <= 0) {
+            return true;
+        }
+        return false;
     }
 }
